@@ -82,13 +82,16 @@ export const Login: React.FC = () => {
             setError("Please enter your full name.");
             return;
         }
-        if (!email.includes('@')) {
-            setError("Please enter a valid academic email address.");
-            return;
-        }
-        if (password.length < 6) {
-            setError("Password must be at least 6 characters.");
-            return;
+        // Skip email and password checks if they are completing a Google Sign-In profile
+        if (!isGoogleCompletion) {
+            if (!email.includes('@')) {
+                setError("Please enter a valid academic email address.");
+                return;
+            }
+            if (password.length < 6) {
+                setError("Password must be at least 6 characters.");
+                return;
+            }
         }
 
         // NEW: Security Code Validation
@@ -182,7 +185,7 @@ export const Login: React.FC = () => {
                 }
             }
         } else {
-            setError("Google connection failed.");
+            setError(response.errorMsg || "Google connection failed.");
             if (typeof gsap !== 'undefined') {
                 gsap.fromTo(formRef.current, { x: -10 }, { x: 0, duration: 0.1, repeat: 5, ease: "linear" });
             }

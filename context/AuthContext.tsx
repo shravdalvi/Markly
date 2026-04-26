@@ -16,7 +16,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
-  loginWithGoogle: () => Promise<{success: boolean, status?: 'LOGGED_IN' | 'NEEDS_PROFILE', firebaseUser?: any}>;
+  loginWithGoogle: () => Promise<{success: boolean, status?: 'LOGGED_IN' | 'NEEDS_PROFILE', firebaseUser?: any, errorMsg?: string}>;
   completeGoogleAuth: (firebaseUser: any, role: UserRole, extraAuthData: any) => Promise<boolean>;
   register: (email: string, password: string, name: string, role: UserRole, extraAuthData?: { clubId?: string, admissionNumber?: string, division?: string, collegeYear?: string, committee?: string, department?: string, position?: string }) => Promise<boolean>;
   logout: () => Promise<void>;
@@ -163,7 +163,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   // --- GOOGLE LOGIN/REGISTER LOGIC ---
-  const loginWithGoogle = async (): Promise<{success: boolean, status?: 'LOGGED_IN' | 'NEEDS_PROFILE', firebaseUser?: any}> => {
+  const loginWithGoogle = async (): Promise<{success: boolean, status?: 'LOGGED_IN' | 'NEEDS_PROFILE', firebaseUser?: any, errorMsg?: string}> => {
     setIsLoading(true);
     try {
       const provider = new GoogleAuthProvider();
@@ -194,10 +194,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setIsLoading(false);
         return { success: true, status: 'NEEDS_PROFILE', firebaseUser };
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Google Auth Error:", error);
       setIsLoading(false);
-      return { success: false };
+      return { success: false, errorMsg: error?.message || "Google Auth Error" };
     }
   };
 
