@@ -36,6 +36,9 @@ export interface User {
   // Lead specific fields
   clubId?: string;          
   position?: string;
+  // Faculty specific fields
+  employeeNumber?: string;
+  committeeCoordinator?: string;
 }
 
 export interface Meeting {

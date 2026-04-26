@@ -246,8 +246,7 @@ const LeadView: React.FC<{ user: any }> = ({ user }) => {
 
 // --- FACULTY VIEW ---
 const FacultyView: React.FC<{ user: any }> = ({ user }) => {
-    // Simulate Faculty Coordinator Logic
-    const coordinatedClubId = 'c1'; // Mocked mapping
+    const coordinatedClubId = user.committeeCoordinator;
     const coordinatedClub = CLUBS.find(c => c.id === coordinatedClubId);
 
     const [clubMeetings, setClubMeetings] = useState<Meeting[]>([]);
@@ -271,8 +270,8 @@ const FacultyView: React.FC<{ user: any }> = ({ user }) => {
                 <div className="grid md:grid-cols-4 gap-6">
                     <InfoRow label="Designation" value="Assistant Professor" />
                     <InfoRow label="Department" value={user.department || user.branch || 'Engineering'} />
-                    <InfoRow label="Employee ID" value="FAC-0042" />
-                    <InfoRow label="Role" value="Club Coordinator" />
+                    <InfoRow label="Employee ID" value={user.employeeNumber || 'Not Specified'} />
+                    <InfoRow label="Role" value={coordinatedClub ? "Club Coordinator" : "Faculty"} />
                 </div>
             </div>
 

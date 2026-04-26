@@ -39,6 +39,8 @@ export const Login: React.FC = () => {
     const [committee, setCommittee] = useState(CLUBS[0].name);
     const [department, setDepartment] = useState('Computer Engineering');
     const [position, setPosition] = useState('');
+    const [employeeNumber, setEmployeeNumber] = useState('');
+    const [committeeCoordinator, setCommitteeCoordinator] = useState('None');
 
     // --- UI/UX State ---
     const [error, setError] = useState<string | null>(null);
@@ -69,6 +71,9 @@ export const Login: React.FC = () => {
         }
         if (role === UserRole.STUDENT) {
             setCommittee(CLUBS[0].name);
+        }
+        if (role === UserRole.FACULTY) {
+            setCommitteeCoordinator('None');
         }
     }, [role, isLoginMode]);
 
@@ -122,7 +127,9 @@ export const Login: React.FC = () => {
                         collegeYear: (role === UserRole.STUDENT || role === UserRole.LEAD) ? collegeYear : undefined,
                         committee: role === UserRole.STUDENT ? committee : undefined,
                         position: role === UserRole.LEAD ? position : undefined,
-                        department: department
+                        department: department,
+                        employeeNumber: role === UserRole.FACULTY ? employeeNumber : undefined,
+                        committeeCoordinator: role === UserRole.FACULTY ? committeeCoordinator : undefined
                     }
                 );
             } else if (isLoginMode) {
@@ -142,7 +149,9 @@ export const Login: React.FC = () => {
                         collegeYear: (role === UserRole.STUDENT || role === UserRole.LEAD) ? collegeYear : undefined,
                         committee: role === UserRole.STUDENT ? committee : undefined,
                         position: role === UserRole.LEAD ? position : undefined,
-                        department: department
+                        department: department,
+                        employeeNumber: role === UserRole.FACULTY ? employeeNumber : undefined,
+                        committeeCoordinator: role === UserRole.FACULTY ? committeeCoordinator : undefined
                     }
                 );
             }
@@ -413,6 +422,45 @@ export const Login: React.FC = () => {
                                         </div>
                                     </>
                                 )}
+                            </div>
+                        )}
+
+                        {/* Faculty Specific Fields - ONLY ON SIGN UP */}
+                        {!isLoginMode && role === UserRole.FACULTY && (
+                            <div className="grid grid-cols-2 gap-4 animate-fadeIn">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Employee Number</label>
+                                    <div className={`flex items-center border rounded-xl px-4 py-3 transition-colors bg-slate-50 ${focusedField === 'employeeNumber' ? 'border-primary-500 ring-4 ring-primary-500/10 bg-white' : 'border-slate-200'}`}>
+                                        <input
+                                            type="text"
+                                            required={!isLoginMode}
+                                            value={employeeNumber}
+                                            onFocus={() => setFocusedField('employeeNumber')}
+                                            onBlur={() => setFocusedField(null)}
+                                            onChange={(e) => setEmployeeNumber(e.target.value)}
+                                            placeholder="e.g. EMP12345"
+                                            className="flex-1 w-full bg-transparent border-none focus:ring-0 text-slate-800 placeholder:text-slate-400 outline-none text-sm font-medium"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Committee Coordinator</label>
+                                    <div className="relative">
+                                        <select
+                                            value={committeeCoordinator}
+                                            onChange={(e) => setCommitteeCoordinator(e.target.value)}
+                                            className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-700 py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium text-sm"
+                                        >
+                                            <option value="None">None</option>
+                                            {CLUBS.map(c => (
+                                                <option key={c.id} value={c.id}>{c.name}</option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         )}
 

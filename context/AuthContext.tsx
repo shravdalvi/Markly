@@ -11,14 +11,14 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   loginWithGoogle: () => Promise<{success: boolean, status?: 'LOGGED_IN' | 'NEEDS_PROFILE', firebaseUser?: any, errorMsg?: string}>;
   completeGoogleAuth: (firebaseUser: any, role: UserRole, extraAuthData: any) => Promise<boolean>;
-  register: (email: string, password: string, name: string, role: UserRole, extraAuthData?: { clubId?: string, admissionNumber?: string, division?: string, collegeYear?: string, committee?: string, department?: string, position?: string }) => Promise<boolean>;
+  register: (email: string, password: string, name: string, role: UserRole, extraAuthData?: { clubId?: string, admissionNumber?: string, division?: string, collegeYear?: string, committee?: string, department?: string, position?: string, employeeNumber?: string, committeeCoordinator?: string }) => Promise<boolean>;
   logout: () => Promise<void>;
   isLoading: boolean;
   isInitialized: boolean;
@@ -33,49 +33,43 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
 // --- INITIAL LOAD LISTENER ---
   useEffect(() => {
+    let unsubUserDoc: (() => void) | null = null;
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // QUICK CHECK: If we already manually set the user in login/register, skip this!
-        setUser((currentUser) => {
-          if (currentUser?.id === firebaseUser.uid) {
-             return currentUser; // Keep existing state, avoid lag
+        const docRef = doc(db, 'users', firebaseUser.uid);
+        unsubUserDoc = onSnapshot(docRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            setUser({
+              id: firebaseUser.uid,
+              name: userData.name,
+              email: userData.email,
+              role: userData.role as UserRole,
+              clubId: userData.clubId,
+              admissionNumber: userData.admissionNumber,
+              division: userData.division,
+              collegeYear: userData.collegeYear,
+              committee: userData.committee,
+              department: userData.department,
+              position: userData.position,
+              employeeNumber: userData.employeeNumber,
+              committeeCoordinator: userData.committeeCoordinator
+            });
           }
-          return currentUser;
+          setIsInitialized(true);
         });
-
-        // Only fetch if we DON'T have the user state yet (e.g., page refresh)
-        if (!user) {
-            try {
-              const docRef = doc(db, 'users', firebaseUser.uid);
-              const docSnap = await getDoc(docRef);
-              
-              if (docSnap.exists()) {
-                const userData = docSnap.data();
-                setUser({
-                  id: firebaseUser.uid,
-                  name: userData.name,
-                  email: userData.email,
-                  role: userData.role as UserRole,
-                  clubId: userData.clubId,
-                  admissionNumber: userData.admissionNumber,
-                  division: userData.division,
-                  collegeYear: userData.collegeYear,
-                  committee: userData.committee,
-                  department: userData.department,
-                  position: userData.position
-                });
-              }
-            } catch (error) {
-              console.error("Error fetching user data from Firestore:", error);
-            }
-        }
       } else {
+        if (unsubUserDoc) unsubUserDoc();
         setUser(null);
+        setIsInitialized(true); 
       }
-      setIsInitialized(true); 
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if (unsubUserDoc) unsubUserDoc();
+    };
   }, []); // We intentionally leave the dependency array empty here
 
   // --- REAL LOGIN LOGIC ---
@@ -101,7 +95,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           collegeYear: userData.collegeYear,
           committee: userData.committee,
           department: userData.department,
-          position: userData.position
+          position: userData.position,
+          employeeNumber: userData.employeeNumber,
+          committeeCoordinator: userData.committeeCoordinator
         });
       }
 
@@ -115,7 +111,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   // --- REAL REGISTRATION LOGIC ---
-  const register = async (email: string, password: string, name: string, role: UserRole, extraAuthData?: { clubId?: string, admissionNumber?: string, division?: string, collegeYear?: string, committee?: string, department?: string, position?: string }): Promise<boolean> => {
+  const register = async (email: string, password: string, name: string, role: UserRole, extraAuthData?: { clubId?: string, admissionNumber?: string, division?: string, collegeYear?: string, committee?: string, department?: string, position?: string, employeeNumber?: string, committeeCoordinator?: string }): Promise<boolean> => {
     setIsLoading(true);
     try {
       // 1. Create the user in Firebase Authentication
@@ -133,7 +129,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         ...(extraAuthData?.collegeYear && { collegeYear: extraAuthData.collegeYear }),
         ...(extraAuthData?.committee && { committee: extraAuthData.committee }),
         ...(extraAuthData?.department && { department: extraAuthData.department }),
-        ...(extraAuthData?.position && { position: extraAuthData.position })
+        ...(extraAuthData?.position && { position: extraAuthData.position }),
+        ...(extraAuthData?.employeeNumber && { employeeNumber: extraAuthData.employeeNumber }),
+        ...(extraAuthData?.committeeCoordinator && { committeeCoordinator: extraAuthData.committeeCoordinator })
       };
 
       await setDoc(doc(db, 'users', firebaseUser.uid), newUserData);
@@ -150,7 +148,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         collegeYear: newUserData.collegeYear,
         committee: newUserData.committee,
         department: newUserData.department,
-        position: newUserData.position
+        position: newUserData.position,
+        employeeNumber: newUserData.employeeNumber,
+        committeeCoordinator: newUserData.committeeCoordinator
       });
 
       setIsLoading(false);
@@ -186,7 +186,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           collegeYear: userData.collegeYear,
           committee: userData.committee,
           department: userData.department,
-          position: userData.position
+          position: userData.position,
+          employeeNumber: userData.employeeNumber,
+          committeeCoordinator: userData.committeeCoordinator
         });
         setIsLoading(false);
         return { success: true, status: 'LOGGED_IN' };
@@ -214,7 +216,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         ...(extraAuthData?.collegeYear && { collegeYear: extraAuthData.collegeYear }),
         ...(extraAuthData?.committee && { committee: extraAuthData.committee }),
         ...(extraAuthData?.department && { department: extraAuthData.department }),
-        ...(extraAuthData?.position && { position: extraAuthData.position })
+        ...(extraAuthData?.position && { position: extraAuthData.position }),
+        ...(extraAuthData?.employeeNumber && { employeeNumber: extraAuthData.employeeNumber }),
+        ...(extraAuthData?.committeeCoordinator && { committeeCoordinator: extraAuthData.committeeCoordinator })
       };
       
       const docRef = doc(db, 'users', firebaseUser.uid);
