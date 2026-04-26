@@ -64,6 +64,7 @@ export interface AttendanceRecord {
   studentDiv?: string;
   studentYear?: string;
   studentDepartment?: string;
+  studentPosition?: string;
   missedLecture?: string;
   status: AttendanceStatus;
   timestamp?: any;

@@ -101,10 +101,6 @@ export const Login: React.FC = () => {
 
         // NEW: Security Code Validation
         if (!isLoginMode) {
-            if (role === UserRole.FACULTY && accessCode !== FACULTY_SECRET_CODE) {
-                setError("Invalid Faculty Access Code. Please contact administration.");
-                return;
-            }
             if (role === UserRole.LEAD && accessCode !== LEAD_SECRET_CODE) {
                 setError("Invalid Club Lead Access Code. Please contact administration.");
                 return;
@@ -126,7 +122,7 @@ export const Login: React.FC = () => {
                         division: (role === UserRole.STUDENT || role === UserRole.LEAD) ? division : undefined,
                         collegeYear: (role === UserRole.STUDENT || role === UserRole.LEAD) ? collegeYear : undefined,
                         committee: role === UserRole.STUDENT ? committee : undefined,
-                        position: role === UserRole.LEAD ? position : undefined,
+                        position: (role === UserRole.LEAD || role === UserRole.STUDENT) ? position : undefined,
                         department: department,
                         employeeNumber: role === UserRole.FACULTY ? employeeNumber : undefined,
                         committeeCoordinator: role === UserRole.FACULTY ? committeeCoordinator : undefined
@@ -148,7 +144,7 @@ export const Login: React.FC = () => {
                         division: (role === UserRole.STUDENT || role === UserRole.LEAD) ? division : undefined,
                         collegeYear: (role === UserRole.STUDENT || role === UserRole.LEAD) ? collegeYear : undefined,
                         committee: role === UserRole.STUDENT ? committee : undefined,
-                        position: role === UserRole.LEAD ? position : undefined,
+                        position: (role === UserRole.LEAD || role === UserRole.STUDENT) ? position : undefined,
                         department: department,
                         employeeNumber: role === UserRole.FACULTY ? employeeNumber : undefined,
                         committeeCoordinator: role === UserRole.FACULTY ? committeeCoordinator : undefined
@@ -387,40 +383,40 @@ export const Login: React.FC = () => {
                                     </div>
                                 )}
                                 {role === UserRole.LEAD && (
-                                    <>
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Select Club / Committee</label>
-                                            <div className="relative">
-                                                <select
-                                                    value={clubId}
-                                                    onChange={(e) => setClubId(e.target.value)}
-                                                    className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-700 py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium text-sm"
-                                                >
-                                                    {CLUBS.map(c => (
-                                                        <option key={c.id} value={c.id}>{c.name}</option>
-                                                    ))}
-                                                </select>
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                                                </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Select Club / Committee</label>
+                                        <div className="relative">
+                                            <select
+                                                value={clubId}
+                                                onChange={(e) => setClubId(e.target.value)}
+                                                className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-700 py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium text-sm"
+                                            >
+                                                {CLUBS.map(c => (
+                                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                                ))}
+                                            </select>
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                                             </div>
                                         </div>
-                                        <div className="space-y-1.5 col-span-2">
-                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Position in Club</label>
-                                            <div className={`flex items-center border rounded-xl px-4 py-3 transition-colors bg-slate-50 ${focusedField === 'position' ? 'border-primary-500 ring-4 ring-primary-500/10 bg-white' : 'border-slate-200'}`}>
-                                                <input
-                                                    type="text"
-                                                    required={!isLoginMode}
-                                                    value={position}
-                                                    onFocus={() => setFocusedField('position')}
-                                                    onBlur={() => setFocusedField(null)}
-                                                    onChange={(e) => setPosition(e.target.value)}
-                                                    placeholder="e.g. Chair, Co-Chair, Treasurer"
-                                                    className="flex-1 w-full bg-transparent border-none focus:ring-0 text-slate-800 placeholder:text-slate-400 outline-none text-sm font-medium"
-                                                />
-                                            </div>
+                                    </div>
+                                )}
+                                {(role === UserRole.LEAD || role === UserRole.STUDENT) && (
+                                    <div className={`space-y-1.5 ${role === UserRole.LEAD ? 'col-span-2' : ''}`}>
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Position in Club</label>
+                                        <div className={`flex items-center border rounded-xl px-4 py-3 transition-colors bg-slate-50 ${focusedField === 'position' ? 'border-primary-500 ring-4 ring-primary-500/10 bg-white' : 'border-slate-200'}`}>
+                                            <input
+                                                type="text"
+                                                required={!isLoginMode}
+                                                value={position}
+                                                onFocus={() => setFocusedField('position')}
+                                                onBlur={() => setFocusedField(null)}
+                                                onChange={(e) => setPosition(e.target.value)}
+                                                placeholder={role === UserRole.LEAD ? "e.g. Chair, Co-Chair" : "e.g. Member, Coordinator"}
+                                                className="flex-1 w-full bg-transparent border-none focus:ring-0 text-slate-800 placeholder:text-slate-400 outline-none text-sm font-medium"
+                                            />
                                         </div>
-                                    </>
+                                    </div>
                                 )}
                             </div>
                         )}
@@ -509,12 +505,11 @@ export const Login: React.FC = () => {
                             </>
                         )}
 
-                        {/* Error Banner */}
-                        {/* NEW: Security Access Code (Only for Lead/Faculty during Sign Up or Google Completion) */}
-                        {(!isLoginMode || isGoogleCompletion) && (role === UserRole.LEAD || role === UserRole.FACULTY) && (
+                        {/* NEW: Security Access Code (Only for Lead) */}
+                        {(!isLoginMode || isGoogleCompletion) && (role === UserRole.LEAD) && (
                             <div className="space-y-1.5 animate-fadeIn">
                                 <label className="text-xs font-bold text-amber-600 uppercase tracking-wide">
-                                    {role === UserRole.LEAD ? 'Club Lead' : 'Faculty'} Access Code
+                                    Club Lead Access Code
                                 </label>
                                 <div className={`flex items-center border rounded-xl px-4 py-3 transition-colors bg-amber-50/50 ${focusedField === 'accessCode' ? 'border-amber-500 ring-4 ring-amber-500/10 bg-white' : 'border-amber-200'}`}>
                                     <svg className={`w-5 h-5 mr-3 transition-colors ${focusedField === 'accessCode' ? 'text-amber-500' : 'text-amber-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" /></svg>

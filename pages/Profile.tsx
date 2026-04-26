@@ -109,6 +109,7 @@ const StudentView: React.FC<{ user: any }> = ({ user }) => {
                             <InfoRow label="Year / Batch" value={user.collegeYear || user.year || 'N/A'} />
                             <InfoRow label="Division" value={user.division || 'N/A'} />
                             <InfoRow label="Committee" value={user.committee || 'N/A'} />
+                            <InfoRow label="Position" value={user.position || 'Member'} />
                             <InfoRow label="Status" value="Active Student" />
                         </div>
                     </div>

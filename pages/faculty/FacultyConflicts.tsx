@@ -28,6 +28,7 @@ interface AttendanceRecord {
   studentDiv?: string;
   studentYear?: string;
   studentDepartment?: string;
+  studentPosition?: string;
   missedLecture: string;   // The academic class the student is missing
   status: string;
 }
@@ -68,14 +69,21 @@ export const FacultyConflicts: React.FC = () => {
     return () => unsubUsers();
   }, []);
 
-  // ── Fetch all "DECLARED" attendance records in real-time ─────────────────
+  // ── Fetch conflicts in real-time ──────────────────────────────────────────
   useEffect(() => {
     const unsubAtt = onSnapshot(
       collection(db, 'attendance'),
       snap => {
         const recs: AttendanceRecord[] = snap.docs
           .map(d => ({ id: d.id, ...d.data() } as AttendanceRecord))
-          .filter(r => (r.status || '').toUpperCase() === 'DECLARED');
+          .filter(r => {
+            const st = (r.status || '').toUpperCase();
+            // Faculty only needs to approve if they haven't already and the lead didn't reject
+            const isPendingOD = st === 'DECLARED' || st === 'PRESENT';
+            // It's only a conflict if they actually missed a lecture
+            const hasConflict = r.missedLecture && r.missedLecture.toLowerCase() !== 'none';
+            return isPendingOD && hasConflict;
+          });
         setAllRecords(recs);
         setLoading(false);
         // Animate new items
@@ -111,7 +119,8 @@ export const FacultyConflicts: React.FC = () => {
         studentAdmissionNumber: student?.admissionNumber || rec.studentAdmissionNumber,
         studentDiv: student?.division || rec.studentDiv,
         studentYear: student?.collegeYear || rec.studentYear,
-        studentDepartment: student?.department || rec.studentDepartment
+        studentDepartment: student?.department || rec.studentDepartment,
+        studentPosition: student?.position || rec.studentPosition
       };
 
       if (!groups[rec.meetingId]) {
@@ -273,6 +282,7 @@ export const FacultyConflicts: React.FC = () => {
                               {rec.studentDiv && ` · Div ${rec.studentDiv}`}
                               {rec.studentYear && ` · ${rec.studentYear}`}
                               {rec.studentDepartment && ` · ${rec.studentDepartment}`}
+                              {rec.studentPosition && ` · ${rec.studentPosition}`}
                             </div>
                           </div>
                         </div>

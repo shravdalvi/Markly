@@ -254,6 +254,7 @@ export const StudentAttendance: React.FC = () => {
         studentDiv:             (user as any).division || '',
         studentYear:            (user as any).collegeYear || (user as any).year || '',
         studentDepartment:      (user as any).department || (user as any).branch || '',
+        studentPosition:        (user as any).position || 'Member',
         missedLecture,          // ← shown in faculty conflicts
         status:                 'DECLARED',
         createdAt:              serverTimestamp(),
@@ -285,6 +286,7 @@ export const StudentAttendance: React.FC = () => {
         studentDiv:             (user as any).division || '',
         studentYear:            (user as any).collegeYear || (user as any).year || '',
         studentDepartment:      (user as any).department || (user as any).branch || '',
+        studentPosition:        (user as any).position || 'Member',
         missedLecture:          '',
         status:                 'ABSENT',
         createdAt:              serverTimestamp(),

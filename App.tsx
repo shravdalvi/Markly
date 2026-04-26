@@ -8,7 +8,7 @@ import { StudentAttendance } from './pages/student/StudentAttendance';
 import { LeadMarking } from './pages/lead/LeadMarking';
 import { FacultyConflicts } from './pages/faculty/FacultyConflicts';
 import { Profile } from './pages/Profile';
-import { Announcements } from './pages/Announcements';
+import { MembersDirectory } from './pages/MembersDirectory';
 import { CreateMeet } from './pages/lead/CreateMeet';
 import { UserRole } from './types'; // Added this import to check roles
 
@@ -60,10 +60,10 @@ const AppRoutes = () => {
         } 
       />
       <Route 
-        path="/announcements" 
+        path="/directory" 
         element={
-          <ProtectedRoute>
-            <Announcements />
+          <ProtectedRoute allowedRoles={[UserRole.LEAD, UserRole.FACULTY]}>
+            <MembersDirectory />
           </ProtectedRoute>
         } 
       />

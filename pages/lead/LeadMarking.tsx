@@ -236,7 +236,7 @@ export const LeadMarking: React.FC = () => {
                         <thead>
                             <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
                                 <th className="px-6 py-4">Student Name</th>
-                                <th className="px-6 py-4">Details (Div, Year, Dept)</th>
+                                <th className="px-6 py-4">Details (Div, Year, Dept, Pos)</th>
                                 <th className="px-6 py-4">Status</th>
                                 <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
@@ -266,6 +266,11 @@ export const LeadMarking: React.FC = () => {
                                             <div className="bg-slate-50 text-slate-700 px-2 py-0.5 rounded text-[11px] font-bold border border-slate-200">
                                                 {record.studentDepartment || 'Dept N/A'}
                                             </div>
+                                            {record.studentPosition && (
+                                                <div className="bg-amber-50 text-amber-700 px-2 py-0.5 rounded text-[11px] font-bold border border-amber-200">
+                                                    {record.studentPosition}
+                                                </div>
+                                            )}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
