@@ -37,19 +37,19 @@ export const Profile: React.FC = () => {
                     <p className="text-slate-500 font-medium text-lg">{user.email}</p>
                     <div className="flex items-center justify-center md:justify-start gap-2 pt-2">
                         <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${user.role === UserRole.FACULTY
-                                ? 'bg-amber-50 text-amber-700 border-amber-100' // Distinguish Faculty slightly 
-                                : 'bg-primary-50 text-primary-700 border-primary-100'
+                            ? 'bg-amber-50 text-amber-700 border-amber-100' // Distinguish Faculty slightly 
+                            : 'bg-primary-50 text-primary-700 border-primary-100'
                             }`}>
                             {user.role === UserRole.LEAD ? 'Club Lead' : user.role}
                         </span>
-                        {user.role === UserRole.STUDENT && (
+                        {user.role === UserRole.STUDENT && ((user as any).collegeYear || (user as any).year) && (
                             <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                                {(user as any).collegeYear || (user as any).year || '1st Year'}
+                                {(user as any).collegeYear || (user as any).year}
                             </span>
                         )}
-                        {(user.role === UserRole.FACULTY || user.role === UserRole.STUDENT) && (
+                        {(user.role === UserRole.FACULTY || user.role === UserRole.STUDENT) && (user.department || (user as any).branch) && (
                             <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                                {user.department || (user as any).branch || 'General'}
+                                {user.department || (user as any).branch}
                             </span>
                         )}
                     </div>
@@ -170,14 +170,14 @@ const LeadView: React.FC<{ user: any }> = ({ user }) => {
             fetched.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
             setClubMeetings(fetched);
         });
-        
+
         // Members count logic: typically users with joinedClubIds array containing clubId
         // In this demo, we mock it realistically based on users collection if tracking students
         const getMembersCount = async () => {
             // we will simulate finding members by just setting a mock for now since user queries array-contains can be complex if not indexed
             // In a real app: query(collection(db, 'users'), where('joinedClubIds', 'array-contains', user.clubId))
             // Here we just mock realistic numbers
-            setMembersCount(32); 
+            setMembersCount(32);
         };
         getMembersCount();
 
@@ -197,12 +197,22 @@ const LeadView: React.FC<{ user: any }> = ({ user }) => {
             <div className="grid md:grid-cols-3 gap-8">
                 <div className="md:col-span-1 space-y-6">
                     <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                        <h3 className="font-bold text-slate-800 text-lg border-b border-slate-100 pb-3">Lead Info</h3>
+                        <div className="space-y-4">
+                            <InfoRow label="Admission No" value={user.admissionNumber || 'N/A'} />
+                            <InfoRow label="Department" value={user.department || user.branch || 'N/A'} />
+                            <InfoRow label="Year / Batch" value={user.collegeYear || user.year || 'N/A'} />
+                            <InfoRow label="Division" value={user.division || 'N/A'} />
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
                         <h3 className="font-bold text-slate-800 text-lg border-b border-slate-100 pb-3">Club Details</h3>
                         {myClub ? (
                             <div className="space-y-4">
                                 <InfoRow label="Club Name" value={myClub.name} />
                                 <InfoRow label="Category" value={myClub.category} />
-                                <InfoRow label="Your Role" value="Chairperson / Lead" />
+                                <InfoRow label="Your Role" value={user.position || 'Club Lead'} />
                                 <div className="pt-2">
                                     <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Description</label>
                                     <p className="text-sm text-slate-600 leading-relaxed">{myClub.description}</p>

@@ -13,7 +13,7 @@ const FACULTY_SECRET_CODE = "PHCET2026";
 const LEAD_SECRET_CODE = "PHCET2026";
 
 export const Login: React.FC = () => {
-    const { login, register, isLoading } = useAuth();
+    const { login, register, loginWithGoogle, completeGoogleAuth, isLoading } = useAuth();
     const navigate = useNavigate();
 
     // --- Refs for Animation ---
@@ -23,6 +23,8 @@ export const Login: React.FC = () => {
 
     // --- Mode State ---
     const [isLoginMode, setIsLoginMode] = useState(true);
+    const [isGoogleCompletion, setIsGoogleCompletion] = useState(false);
+    const [googleFirebaseUser, setGoogleFirebaseUser] = useState<any>(null);
 
     // --- Form State ---
     const [name, setName] = useState(''); 
@@ -36,6 +38,7 @@ export const Login: React.FC = () => {
     const [collegeYear, setCollegeYear] = useState('First Year');
     const [committee, setCommittee] = useState(CLUBS[0].name);
     const [department, setDepartment] = useState('Computer Engineering');
+    const [position, setPosition] = useState('');
 
     // --- UI/UX State ---
     const [error, setError] = useState<string | null>(null);
@@ -103,7 +106,23 @@ export const Login: React.FC = () => {
         try {
             let success = false;
             
-            if (isLoginMode) {
+            if (isGoogleCompletion && googleFirebaseUser) {
+                // GOOGLE ONBOARDING REGISTRATION
+                success = await completeGoogleAuth(
+                    googleFirebaseUser,
+                    role,
+                    {
+                        name: name,
+                        clubId: role === UserRole.LEAD ? clubId : undefined,
+                        admissionNumber: (role === UserRole.STUDENT || role === UserRole.LEAD) ? admissionNumber : undefined,
+                        division: (role === UserRole.STUDENT || role === UserRole.LEAD) ? division : undefined,
+                        collegeYear: (role === UserRole.STUDENT || role === UserRole.LEAD) ? collegeYear : undefined,
+                        committee: role === UserRole.STUDENT ? committee : undefined,
+                        position: role === UserRole.LEAD ? position : undefined,
+                        department: department
+                    }
+                );
+            } else if (isLoginMode) {
                 // REAL LOGIN
                 success = await login(email, password);
             } else {
@@ -115,10 +134,11 @@ export const Login: React.FC = () => {
                     role, 
                     {
                         clubId: role === UserRole.LEAD ? clubId : undefined,
-                        admissionNumber: role === UserRole.STUDENT ? admissionNumber : undefined,
-                        division: role === UserRole.STUDENT ? division : undefined,
-                        collegeYear: role === UserRole.STUDENT ? collegeYear : undefined,
+                        admissionNumber: (role === UserRole.STUDENT || role === UserRole.LEAD) ? admissionNumber : undefined,
+                        division: (role === UserRole.STUDENT || role === UserRole.LEAD) ? division : undefined,
+                        collegeYear: (role === UserRole.STUDENT || role === UserRole.LEAD) ? collegeYear : undefined,
                         committee: role === UserRole.STUDENT ? committee : undefined,
+                        position: role === UserRole.LEAD ? position : undefined,
                         department: department
                     }
                 );
@@ -137,6 +157,35 @@ export const Login: React.FC = () => {
             }
         } catch (err) {
             setError("Connection failed. Please check your network.");
+        }
+    };
+
+    const handleGoogleLogin = async () => {
+        setError(null);
+        
+        const response = await loginWithGoogle();
+
+        if (response.success) {
+            if (response.status === 'LOGGED_IN') {
+                navigate('/dashboard');
+            } else if (response.status === 'NEEDS_PROFILE') {
+                setGoogleFirebaseUser(response.firebaseUser);
+                setIsGoogleCompletion(true);
+                setIsLoginMode(false); // Trick UI into rendering signup fields
+                
+                if (response.firebaseUser?.displayName) {
+                    setName(response.firebaseUser.displayName);
+                }
+                
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(formRef.current, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5 });
+                }
+            }
+        } else {
+            setError("Google connection failed.");
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(formRef.current, { x: -10 }, { x: 0, duration: 0.1, repeat: 5, ease: "linear" });
+            }
         }
     };
 
@@ -190,10 +239,10 @@ export const Login: React.FC = () => {
 
                     <div className="text-center lg:text-left">
                         <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
-                            {isLoginMode ? 'Welcome Back' : 'Create an Account'}
+                            {isGoogleCompletion ? 'Complete Profile' : (isLoginMode ? 'Welcome Back' : 'Create an Account')}
                         </h2>
                         <p className="text-slate-500 mt-2">
-                            {isLoginMode ? 'Sign in to access your customized dashboard.' : 'Sign up to get started with Markly.'}
+                            {isGoogleCompletion ? 'Almost there! Setup your profile details.' : (isLoginMode ? 'Sign in to access your customized dashboard.' : 'Sign up to get started with Markly.')}
                         </p>
                     </div>
 
@@ -260,8 +309,8 @@ export const Login: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Student Specific Fields - ONLY ON SIGN UP */}
-                        {!isLoginMode && role === UserRole.STUDENT && (
+                        {/* Student & Lead Specific Fields - ONLY ON SIGN UP */}
+                        {!isLoginMode && (role === UserRole.STUDENT || role === UserRole.LEAD) && (
                             <div className="grid grid-cols-2 gap-4 animate-fadeIn">
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Admission No.</label>
@@ -308,65 +357,110 @@ export const Login: React.FC = () => {
                                         </select>
                                     </div>
                                 </div>
+                                {role === UserRole.STUDENT && (
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Committee</label>
+                                        <div className="relative">
+                                            <select
+                                                value={committee}
+                                                onChange={(e) => setCommittee(e.target.value)}
+                                                className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-700 py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium text-sm"
+                                            >
+                                                <option value="None">None</option>
+                                                {CLUBS.map(c => (
+                                                    <option key={c.id} value={c.name}>{c.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
+                                {role === UserRole.LEAD && (
+                                    <>
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Select Club / Committee</label>
+                                            <div className="relative">
+                                                <select
+                                                    value={clubId}
+                                                    onChange={(e) => setClubId(e.target.value)}
+                                                    className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-700 py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium text-sm"
+                                                >
+                                                    {CLUBS.map(c => (
+                                                        <option key={c.id} value={c.id}>{c.name}</option>
+                                                    ))}
+                                                </select>
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1.5 col-span-2">
+                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Position in Club</label>
+                                            <div className={`flex items-center border rounded-xl px-4 py-3 transition-colors bg-slate-50 ${focusedField === 'position' ? 'border-primary-500 ring-4 ring-primary-500/10 bg-white' : 'border-slate-200'}`}>
+                                                <input
+                                                    type="text"
+                                                    required={!isLoginMode}
+                                                    value={position}
+                                                    onFocus={() => setFocusedField('position')}
+                                                    onBlur={() => setFocusedField(null)}
+                                                    onChange={(e) => setPosition(e.target.value)}
+                                                    placeholder="e.g. Chair, Co-Chair, Treasurer"
+                                                    className="flex-1 w-full bg-transparent border-none focus:ring-0 text-slate-800 placeholder:text-slate-400 outline-none text-sm font-medium"
+                                                />
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Email & Password Fields */}
+                        {!isGoogleCompletion && (
+                            <>
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Committee</label>
-                                    <div className="relative">
-                                        <select
-                                            value={committee}
-                                            onChange={(e) => setCommittee(e.target.value)}
-                                            className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-700 py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium text-sm"
-                                        >
-                                            <option value="None">None</option>
-                                            {CLUBS.map(c => (
-                                                <option key={c.id} value={c.name}>{c.name}</option>
-                                            ))}
-                                        </select>
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Email Address</label>
+                                    <div className={`flex items-center border rounded-xl px-4 py-3 transition-colors bg-slate-50 ${focusedField === 'email' ? 'border-primary-500 ring-4 ring-primary-500/10 bg-white' : 'border-slate-200'}`}>
+                                        <svg className={`w-5 h-5 mr-3 transition-colors ${focusedField === 'email' ? 'text-primary-500' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" /></svg>
+                                        <input
+                                            type="email"
+                                            required={!isGoogleCompletion}
+                                            value={email}
+                                            onFocus={() => setFocusedField('email')}
+                                            onBlur={() => setFocusedField(null)}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            placeholder={role === UserRole.FACULTY ? "prof.name@markly.edu" : "student.id@markly.edu"}
+                                            className="flex-1 bg-transparent border-none focus:ring-0 text-slate-800 placeholder:text-slate-400 outline-none text-sm font-medium"
+                                        />
                                     </div>
                                 </div>
-                            </div>
-                        )}
 
-                        {/* Email Field */}
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Email Address</label>
-                            <div className={`flex items-center border rounded-xl px-4 py-3 transition-colors bg-slate-50 ${focusedField === 'email' ? 'border-primary-500 ring-4 ring-primary-500/10 bg-white' : 'border-slate-200'}`}>
-                                <svg className={`w-5 h-5 mr-3 transition-colors ${focusedField === 'email' ? 'text-primary-500' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" /></svg>
-                                <input
-                                    type="email"
-                                    required
-                                    value={email}
-                                    onFocus={() => setFocusedField('email')}
-                                    onBlur={() => setFocusedField(null)}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder={role === UserRole.FACULTY ? "prof.name@markly.edu" : "student.id@markly.edu"}
-                                    className="flex-1 bg-transparent border-none focus:ring-0 text-slate-800 placeholder:text-slate-400 outline-none text-sm font-medium"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Conditional Club Selector (Lead Only) */}
-                        {role === UserRole.LEAD && (
-                            <div className="space-y-1.5 animate-fadeIn">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Select Club</label>
-                                <div className="relative">
-                                    <select
-                                        value={clubId}
-                                        onChange={(e) => setClubId(e.target.value)}
-                                        className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-700 py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium"
-                                    >
-                                        {CLUBS.map(c => (
-                                            <option key={c.id} value={c.id}>{c.name}</option>
-                                        ))}
-                                    </select>
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                                {/* Password Field */}
+                                <div className="space-y-1.5">
+                                    <div className="flex justify-between">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Password</label>
+                                        {isLoginMode && (
+                                            <a href="#" className="text-xs font-bold text-primary-600 hover:text-primary-700">Forgot Password?</a>
+                                        )}
+                                    </div>
+                                    <div className={`flex items-center border rounded-xl px-4 py-3 transition-colors bg-slate-50 ${focusedField === 'password' ? 'border-primary-500 ring-4 ring-primary-500/10 bg-white' : 'border-slate-200'}`}>
+                                        <svg className={`w-5 h-5 mr-3 transition-colors ${focusedField === 'password' ? 'text-primary-500' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                        <input
+                                            type="password"
+                                            required={!isGoogleCompletion}
+                                            value={password}
+                                            onFocus={() => setFocusedField('password')}
+                                            onBlur={() => setFocusedField(null)}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            placeholder="••••••••"
+                                            className="flex-1 bg-transparent border-none focus:ring-0 text-slate-800 placeholder:text-slate-400 outline-none text-sm font-medium"
+                                        />
                                     </div>
                                 </div>
-                            </div>
+                            </>
                         )}
 
-                        {/* NEW: Security Access Code (Only for Lead/Faculty during Sign Up) */}
-                        {!isLoginMode && (role === UserRole.LEAD || role === UserRole.FACULTY) && (
+                        {/* Error Banner */}
+                        {/* NEW: Security Access Code (Only for Lead/Faculty during Sign Up or Google Completion) */}
+                        {(!isLoginMode || isGoogleCompletion) && (role === UserRole.LEAD || role === UserRole.FACULTY) && (
                             <div className="space-y-1.5 animate-fadeIn">
                                 <label className="text-xs font-bold text-amber-600 uppercase tracking-wide">
                                     {role === UserRole.LEAD ? 'Club Lead' : 'Faculty'} Access Code
@@ -388,30 +482,6 @@ export const Login: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Password Field */}
-                        <div className="space-y-1.5">
-                            <div className="flex justify-between">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Password</label>
-                                {isLoginMode && (
-                                    <a href="#" className="text-xs font-bold text-primary-600 hover:text-primary-700">Forgot Password?</a>
-                                )}
-                            </div>
-                            <div className={`flex items-center border rounded-xl px-4 py-3 transition-colors bg-slate-50 ${focusedField === 'password' ? 'border-primary-500 ring-4 ring-primary-500/10 bg-white' : 'border-slate-200'}`}>
-                                <svg className={`w-5 h-5 mr-3 transition-colors ${focusedField === 'password' ? 'text-primary-500' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                                <input
-                                    type="password"
-                                    required
-                                    value={password}
-                                    onFocus={() => setFocusedField('password')}
-                                    onBlur={() => setFocusedField(null)}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="••••••••"
-                                    className="flex-1 bg-transparent border-none focus:ring-0 text-slate-800 placeholder:text-slate-400 outline-none text-sm font-medium"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Error Banner */}
                         {error && (
                             <div className="p-4 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100 flex items-start gap-3">
                                 <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -430,13 +500,42 @@ export const Login: React.FC = () => {
                             {isLoading ? (
                                 <div className="flex items-center justify-center gap-2">
                                     <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                    <span>{isLoginMode ? 'Verifying...' : 'Creating Account...'}</span>
+                                    <span>{isGoogleCompletion ? 'Saving Profile...' : (isLoginMode ? 'Verifying...' : 'Creating Account...')}</span>
                                 </div>
                             ) : (
-                                isLoginMode ? 'Sign In to Dashboard' : 'Create Account'
+                                isGoogleCompletion ? 'Complete Registration' : (isLoginMode ? 'Sign In to Dashboard' : 'Create Account')
                             )}
                         </Button>
                     </form>
+
+                    {!isGoogleCompletion && (
+                        <>
+                            <div className="relative mt-8 mb-6">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-slate-200"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="px-3 bg-white text-slate-400 font-medium tracking-wide">Or continue with</span>
+                        </div>
+                    </div>
+
+                    <Button
+                        fullWidth
+                        size="lg"
+                        type="button"
+                        onClick={handleGoogleLogin}
+                        disabled={isLoading}
+                        variant="outline"
+                        className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm h-12 text-base font-medium flex items-center justify-center gap-3 transition-all rounded-xl"
+                    >
+                        <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                        </svg>
+                        Google
+                    </Button>
 
                     {/* --- TOGGLE SIGN UP / SIGN IN --- */}
                     <div className="text-center mt-6">
@@ -453,6 +552,8 @@ export const Login: React.FC = () => {
                                 : "Already have an account? Sign In"}
                         </button>
                     </div>
+                        </>
+                    )}
 
                 </div>
             </div>

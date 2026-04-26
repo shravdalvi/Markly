@@ -35,6 +35,7 @@ export interface User {
   joinedClubIds?: string[]; 
   // Lead specific fields
   clubId?: string;          
+  position?: string;
 }
 
 export interface Meeting {

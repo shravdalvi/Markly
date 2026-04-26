@@ -168,7 +168,7 @@ const StudentDashboard = () => {
     <div className="space-y-10">
       <SectionHeader
         title={`Welcome, ${user?.name?.split(' ')[0] || 'Student'}`}
-        subtitle={`${(user as any)?.branch || 'General'} • ${(user as any)?.year || '1st Year'}`}
+        subtitle={[user?.department || (user as any)?.branch, (user as any)?.collegeYear || (user as any)?.year].filter(Boolean).join(' • ')}
       />
 
       <section>
@@ -445,7 +445,7 @@ const FacultyDashboard = () => {
     <div className="space-y-10">
       <SectionHeader
         title="Faculty Overview"
-        subtitle={`Prof. ${user?.name?.split(' ')[1] || user?.name || ''} • ${(user as any)?.branch || 'General'}`}
+        subtitle={[`Prof. ${user?.name?.split(' ')[1] || user?.name || ''}`, user?.department || (user as any)?.branch].filter(Boolean).join(' • ')}
       />
 
       {/* Stats Cards */}

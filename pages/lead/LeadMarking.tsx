@@ -14,6 +14,7 @@ export const LeadMarking: React.FC = () => {
     const [meetings, setMeetings] = useState<Meeting[]>([]);
     const [selectedMeetingId, setSelectedMeetingId] = useState<string>('');
     const [records, setRecords] = useState<any[]>([]);
+    const [isSending, setIsSending] = useState(false);
 
     // 1. Fetch lead's meetings from Firestore
     useEffect(() => {
@@ -113,17 +114,58 @@ export const LeadMarking: React.FC = () => {
         document.body.removeChild(link);
     };
 
-    const handleEmailProfessors = () => {
+    const handleEmailProfessors = async () => {
         if (!activeMeeting) return;
         const presentStudents = records.filter(r => r.status === 'PRESENT');
+        if (presentStudents.length === 0) {
+            alert("No students are marked present.");
+            return;
+        }
+
+        setIsSending(true);
         const studentNames = presentStudents.map(r => r.studentName).join(', ');
         
         // Fetch professors from mock data or database
         const facultyEmails = MOCK_USERS.filter(u => u.role === UserRole.FACULTY).map(u => u.email).join(', ') || "faculty@college.edu";
         
-        const subject = encodeURIComponent(`Attendance Report: ${activeMeeting.title}`);
-        const body = encodeURIComponent(`The following students attended the meeting "${activeMeeting.title}":\n\n${studentNames}\n\nPlease mark them as active.`);
-        window.location.href = `mailto:${facultyEmails}?subject=${subject}&body=${body}`;
+        const subject = `Attendance Report: ${activeMeeting.title}`;
+        const body = `The following students attended the meeting "${activeMeeting.title}":\n\n${studentNames}\n\nPlease mark them as active.`;
+
+        // Generate CSV content correctly
+        const headers = ["Name,Division,Year,Department,Admission No"];
+        const rows = presentStudents.map(r => 
+            `"${r.studentName || ''}","${r.studentDiv || ''}","${r.studentYear || ''}","${r.studentDepartment || ''}","${r.studentAdmissionNumber || ''}"`
+        );
+        const csvContent = headers.concat(rows).join("\n");
+        const filename = `attendance_${activeMeeting.title.replace(/\s+/g, '_')}.csv`;
+
+        try {
+            const response = await fetch('http://localhost:5000/api/send-attendance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    toEmail: facultyEmails,
+                    ccEmail: user?.email, // Connected Lead login email
+                    subject,
+                    body,
+                    csvData: csvContent,
+                    filename
+                })
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                // Open Gmail so the lead can explicitly see the email directly
+                window.open("https://mail.google.com/mail/u/0/#inbox", "_blank");
+            } else {
+                alert(`Failed to send email. Check backend configuration. Error: ${data.message}`);
+            }
+        } catch (err) {
+            console.error("Error sending email via API:", err);
+            alert("Failed to reach backend. Make sure the server is running.");
+        } finally {
+            setIsSending(false);
+        }
     };
 
     const handleSubmitFinal = () => {
@@ -275,8 +317,8 @@ export const LeadMarking: React.FC = () => {
                         <Button onClick={handleDownloadCSV} variant="outline" className="text-slate-600 bg-white hover:bg-slate-50">
                             ⬇️ Download CSV
                         </Button>
-                        <Button onClick={handleEmailProfessors} variant="outline" className="text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100">
-                            📧 Mail Professors
+                        <Button onClick={handleEmailProfessors} disabled={isSending} variant="outline" className="text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100">
+                            {isSending ? "📧 Sending..." : "📧 Mail Professors"}
                         </Button>
                         <Button onClick={handleSubmitFinal} className="shadow-lg shadow-primary-500/20 bg-primary-600 hover:bg-primary-700">
                             Finalize & Check All

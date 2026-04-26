@@ -164,6 +164,51 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 /* =========================
+   SEND ATTENDANCE EMAIL
+========================= */
+const nodemailer = require("nodemailer");
+
+app.post("/api/send-attendance", async (req, res) => {
+  const { toEmail, ccEmail, subject, body, csvData, filename } = req.body;
+
+  if (!toEmail || !csvData) {
+    return res.status(400).json({ success: false, message: "Missing required fields" });
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER || "markly.app.demo@gmail.com", 
+        pass: process.env.EMAIL_PASS || "replace_with_app_password",
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER || "markly.app.demo@gmail.com",
+      to: toEmail,
+      cc: ccEmail,
+      subject: subject,
+      text: body,
+      attachments: [
+        {
+          filename: filename || "attendance.csv",
+          content: csvData,
+          contentType: "text/csv",
+        },
+      ],
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("✅ Email sent:", info.messageId);
+    res.json({ success: true, messageId: info.messageId });
+  } catch (err) {
+    console.log("❌ Email ERROR:", err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+/* =========================
    SEND WHATSAPP MESSAGE
 ========================= */
 app.post("/api/send-whatsapp", async (req, res) => {
