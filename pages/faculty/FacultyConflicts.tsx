@@ -44,6 +44,7 @@ interface GroupedConflict {
 export const FacultyConflicts: React.FC = () => {
   const [allRecords,     setAllRecords]     = useState<AttendanceRecord[]>([]);
   const [allMeetings,    setAllMeetings]    = useState<Record<string, any>>({});
+  const [allUsers,       setAllUsers]       = useState<Record<string, any>>({});
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const [loading,        setLoading]        = useState(true);
 
@@ -55,6 +56,16 @@ export const FacultyConflicts: React.FC = () => {
       setAllMeetings(map);
     });
     return () => unsubMeetings();
+  }, []);
+
+  // ── Fetch all users (for joining live student details) ───────────────────
+  useEffect(() => {
+    const unsubUsers = onSnapshot(collection(db, 'users'), snap => {
+      const map: Record<string, any> = {};
+      snap.docs.forEach(d => { map[d.id] = { id: d.id, ...d.data() }; });
+      setAllUsers(map);
+    });
+    return () => unsubUsers();
   }, []);
 
   // ── Fetch all "DECLARED" attendance records in real-time ─────────────────
@@ -93,6 +104,16 @@ export const FacultyConflicts: React.FC = () => {
       const startTime    = meeting?.startTime  || rec.meetingStartTime || '';
       const endTime      = meeting?.endTime    || rec.meetingEndTime   || '';
 
+      const student = allUsers[rec.studentId];
+      const mergedRec = {
+        ...rec,
+        studentName: student?.name || rec.studentName,
+        studentAdmissionNumber: student?.admissionNumber || rec.studentAdmissionNumber,
+        studentDiv: student?.division || rec.studentDiv,
+        studentYear: student?.collegeYear || rec.studentYear,
+        studentDepartment: student?.department || rec.studentDepartment
+      };
+
       if (!groups[rec.meetingId]) {
         groups[rec.meetingId] = {
           meetingId:   rec.meetingId,
@@ -103,7 +124,7 @@ export const FacultyConflicts: React.FC = () => {
           records:     [],
         };
       }
-      groups[rec.meetingId].records.push(rec);
+      groups[rec.meetingId].records.push(mergedRec);
     });
 
     return Object.values(groups).sort((a, b) =>

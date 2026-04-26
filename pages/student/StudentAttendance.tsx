@@ -47,38 +47,20 @@ interface MissedLectureModalProps {
 }
 
 const MissedLectureModal: React.FC<MissedLectureModalProps> = ({ meeting, onConfirm, onCancel }) => {
-  const [input, setInput] = useState('');
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    // Focus input on open
-    setTimeout(() => inputRef.current?.focus(), 100);
-  }, []);
-
-  const handleInputChange = (val: string) => {
-    setInput(val);
-    if (val.trim().length > 0) {
-      setSuggestions(
-        COMMON_SUBJECTS.filter(s => s.toLowerCase().includes(val.toLowerCase())).slice(0, 5)
-      );
-      setShowSuggestions(true);
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  };
-
-  const handleSelect = (s: string) => {
-    setInput(s);
-    setSuggestions([]);
-    setShowSuggestions(false);
-  };
+  const [selectedOption, setSelectedOption] = useState<string>('');
+  const [customInput, setCustomInput] = useState<string>('');
 
   const handleConfirm = () => {
-    const val = input.trim();
-    if (!val) return;
+    let val = '';
+    if (selectedOption === 'None') {
+      val = 'None';
+    } else if (selectedOption === 'Other') {
+      val = customInput.trim();
+    } else {
+      val = selectedOption;
+    }
+
+    if (!val && selectedOption !== 'None') return;
     onConfirm(val);
   };
 
@@ -110,37 +92,37 @@ const MissedLectureModal: React.FC<MissedLectureModalProps> = ({ meeting, onConf
         </div>
 
         {/* Input */}
-        <div className="relative mb-4">
-          <label className="block text-sm font-bold text-slate-700 mb-2">Subject / Lecture Name</label>
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={e => handleInputChange(e.target.value)}
-            onFocus={() => input.trim() && setShowSuggestions(true)}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-            placeholder="e.g. Database Management Systems"
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-400 focus:bg-white transition-all text-sm font-medium"
-          />
+        <div className="relative mb-4 space-y-3">
+          <label className="block text-sm font-bold text-slate-700 mb-2">Select Subject / Lecture</label>
+          <select
+            value={selectedOption}
+            onChange={(e) => setSelectedOption(e.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-400 focus:bg-white transition-all text-sm font-medium appearance-none"
+          >
+            <option value="" disabled>-- Choose an Option --</option>
+            <option value="None">None (No lecture skipped / Free lecture)</option>
+            {COMMON_SUBJECTS.map((subject) => (
+              <option key={subject} value={subject}>{subject}</option>
+            ))}
+            <option value="Other">Add Custom Lecture (Not in list)</option>
+          </select>
 
-          {/* Suggestions Dropdown */}
-          {showSuggestions && suggestions.length > 0 && (
-            <ul className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden">
-              {suggestions.map(s => (
-                <li
-                  key={s}
-                  onMouseDown={() => handleSelect(s)}
-                  className="px-4 py-2.5 text-sm text-slate-700 hover:bg-primary-50 hover:text-primary-700 cursor-pointer font-medium transition-colors"
-                >
-                  {s}
-                </li>
-              ))}
-            </ul>
+          {selectedOption === 'Other' && (
+            <div className="mt-3 animate-fade-in">
+              <label className="block text-xs font-bold text-slate-600 mb-1">Custom Lecture Name</label>
+              <input
+                type="text"
+                value={customInput}
+                onChange={(e) => setCustomInput(e.target.value)}
+                placeholder="e.g. Workshop on AI"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-400 focus:bg-white transition-all text-sm font-medium"
+              />
+            </div>
           )}
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3">
+        <div className="flex gap-3 mt-6">
           <Button
             variant="ghost"
             fullWidth
@@ -152,7 +134,7 @@ const MissedLectureModal: React.FC<MissedLectureModalProps> = ({ meeting, onConf
           <Button
             fullWidth
             onClick={handleConfirm}
-            disabled={!input.trim()}
+            disabled={!selectedOption || (selectedOption === 'Other' && !customInput.trim())}
             className="bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Confirm Attending
@@ -179,7 +161,7 @@ export const StudentAttendance: React.FC = () => {
   // ── Real-time meetings ──────────────────────────────────────────────────
   useEffect(() => {
     if (!user?.id) return;
-    const myClubIds = (user as any).joinedClubIds || [];
+    const myCommittee = (user as any).committee || 'None';
 
     const unsubMeetings = onSnapshot(collection(db, 'meetings'), snap => {
       const fetchedMeetings = snap.docs.map(docSnap => {
@@ -204,7 +186,7 @@ export const StudentAttendance: React.FC = () => {
 
       const relevant = fetchedMeetings
         .filter(m =>
-          (myClubIds.length === 0 || myClubIds.includes(m.clubId)) &&
+          (m.clubName === myCommittee) &&
           m.status.toLowerCase() === 'scheduled'
         )
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
