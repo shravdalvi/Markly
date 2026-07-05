@@ -56,7 +56,11 @@ export const LeadMarking: React.FC = () => {
             query(collection(db, 'attendance'), where('meetingId', '==', selectedMeetingId)),
             snap => {
                 const attRecords = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                setRecords(attRecords);
+                // Show ONLY 'student-01' and filter out everyone else in attendance tracking
+                const filteredRecords = attRecords.filter((r: any) => 
+                    /student-01/i.test(r.studentName || '')
+                );
+                setRecords(filteredRecords);
             }
         );
 
