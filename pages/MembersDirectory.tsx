@@ -22,7 +22,7 @@ export const MembersDirectory: React.FC = () => {
     
     // Filter students by a specific committee
     const activeCommittee = user?.role === UserRole.LEAD 
-        ? CLUBS.find(c => c.id === (user as any)?.clubId)?.name 
+        ? (user as any)?.committee || CLUBS.find(c => c.id === (user as any)?.clubId)?.name || (user as any)?.clubId
         : selectedClub;
 
     useEffect(() => {
@@ -33,7 +33,9 @@ export const MembersDirectory: React.FC = () => {
             unsubLeads = onSnapshot(
                 query(collection(db, 'users'), where('role', '==', UserRole.LEAD)),
                 snap => {
-                    const fetchedLeads = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    let fetchedLeads = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    // Hide specific old test lead names
+                    fetchedLeads = fetchedLeads.filter((l: any) => !/shravani/i.test(l.name || ''));
                     setLeads(fetchedLeads);
                     setLoading(false);
                 }
@@ -59,12 +61,12 @@ export const MembersDirectory: React.FC = () => {
                 where('committee', '==', activeCommittee)
             ),
             snap => {
-                const fetchedStudents = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                // Show ONLY 'student-01' and filter out everyone else
-                const filteredStudents = fetchedStudents.filter((s: any) => 
-                    /student-01/i.test(s.name || '')
+                let fetchedStudents = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Hide specific old test user names
+                fetchedStudents = fetchedStudents.filter((s: any) => 
+                    !/john|krrish|karan|teju/i.test(s.name || '')
                 );
-                setStudents(filteredStudents);
+                setStudents(fetchedStudents);
             }
         );
         
@@ -109,7 +111,7 @@ export const MembersDirectory: React.FC = () => {
                             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm h-[600px] overflow-y-auto">
                                 {CLUBS.map(club => {
                                     const isSelected = selectedClub === club.name;
-                                    const clubLeads = leads.filter(l => l.clubId === club.id);
+                                    const clubLeads = leads.filter(l => l.clubId === club.id || l.committee === club.name || l.clubId === club.name);
                                     
                                     return (
                                         <div 
@@ -147,7 +149,10 @@ export const MembersDirectory: React.FC = () => {
                                     </h3>
                                     {user.role === UserRole.FACULTY && selectedClub && (
                                         <div className="text-sm text-slate-500 font-medium flex gap-2">
-                                            {leads.filter(l => l.clubId === CLUBS.find(c => c.name === selectedClub)?.id).map(l => l.name).join(', ') || 'No Lead'}
+                                            {leads.filter(l => {
+                                                const club = CLUBS.find(c => c.name === selectedClub);
+                                                return club && (l.clubId === club.id || l.committee === club.name || l.clubId === club.name);
+                                            }).map(l => l.name).join(', ') || 'No Lead'}
                                         </div>
                                     )}
                                 </div>

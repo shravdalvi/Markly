@@ -55,12 +55,12 @@ export const LeadMarking: React.FC = () => {
         const unsub = onSnapshot(
             query(collection(db, 'attendance'), where('meetingId', '==', selectedMeetingId)),
             snap => {
-                const attRecords = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                // Show ONLY 'student-01' and filter out everyone else in attendance tracking
-                const filteredRecords = attRecords.filter((r: any) => 
-                    /student-01/i.test(r.studentName || '')
+                let attRecords = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                // Hide specific old test user names
+                attRecords = attRecords.filter((r: any) => 
+                    !/john|krrish|karan|teju/i.test(r.studentName || '')
                 );
-                setRecords(filteredRecords);
+                setRecords(attRecords);
             }
         );
 

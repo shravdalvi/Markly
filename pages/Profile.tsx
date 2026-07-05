@@ -99,58 +99,17 @@ const StudentView: React.FC<{ user: any }> = ({ user }) => {
                 <StatCard label="Active Clubs" value={user.joinedClubIds?.length || 0} />
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8">
-                <div className="md:col-span-1 space-y-6">
-                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-                        <h3 className="font-bold text-slate-800 text-lg border-b border-slate-100 pb-3">Academic Info</h3>
-                        <div className="space-y-4">
-                            <InfoRow label="Admission No" value={user.admissionNumber || 'N/A'} />
-                            <InfoRow label="Department" value={user.department || user.branch || 'N/A'} />
-                            <InfoRow label="Year / Batch" value={user.collegeYear || user.year || 'N/A'} />
-                            <InfoRow label="Division" value={user.division || 'N/A'} />
-                            <InfoRow label="Committee" value={user.committee || 'N/A'} />
-                            <InfoRow label="Position" value={user.position || 'Member'} />
-                            <InfoRow label="Status" value="Active Student" />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="md:col-span-2 space-y-6">
-                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                        <h3 className="font-bold text-slate-800 text-lg border-b border-slate-100 pb-4 mb-4">Club Attendance</h3>
-                        <div className="space-y-4">
-                            {user.joinedClubIds?.map((clubId: string) => {
-                                const club = CLUBS.find(c => c.id === clubId) || { id: clubId, name: 'Unknown Club' };
-                                const clubMeetings = allMeetings.filter(m => m.clubId === clubId && (m.status || '').toLowerCase() === 'completed');
-                                const attendedClubMeetings = myAttendance.filter(a =>
-                                    clubMeetings.some(m => m.id === a.meetingId) &&
-                                    ['PRESENT', 'DECLARED'].includes(a.status?.toUpperCase() || '')
-                                ).length;
-                                const clubTotal = clubMeetings.length || 1;
-                                const clubPct = Math.round((attendedClubMeetings / clubTotal) * 100);
-
-                                return (
-                                    <div key={clubId} className="flex items-center justify-between p-4 rounded-lg bg-slate-50 border border-slate-200">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-lg font-bold text-slate-500 shadow-sm">
-                                                {club.name.charAt(0)}
-                                            </div>
-                                            <div>
-                                                <div className="font-bold text-slate-700">{club.name}</div>
-                                                <div className="text-xs text-slate-500">{attendedClubMeetings} / {clubTotal} Sessions</div>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-xl font-bold text-primary-600">{clubPct}%</div>
-                                            <div className="text-xs text-slate-400 font-bold uppercase">Attendance</div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                            {(!user.joinedClubIds || user.joinedClubIds.length === 0) && (
-                                <p className="text-slate-400 text-sm italic">No clubs joined yet.</p>
-                            )}
-                        </div>
+            <div className="max-w-2xl mx-auto space-y-6">
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 className="font-bold text-slate-800 text-lg border-b border-slate-100 pb-3">Academic Info</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <InfoRow label="Admission No" value={user.admissionNumber || 'N/A'} />
+                        <InfoRow label="Department" value={user.department || user.branch || 'N/A'} />
+                        <InfoRow label="Year / Batch" value={user.collegeYear || user.year || 'N/A'} />
+                        <InfoRow label="Division" value={user.division || 'N/A'} />
+                        <InfoRow label="Committee" value={user.committee || 'N/A'} />
+                        <InfoRow label="Position" value={user.position || 'Member'} />
+                        <InfoRow label="Status" value="Active Student" />
                     </div>
                 </div>
             </div>
@@ -195,9 +154,9 @@ const LeadView: React.FC<{ user: any }> = ({ user }) => {
                 <StatCard label="Upcoming Sessions" value={clubMeetings.length - completedMeetings.length} />
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8">
-                <div className="md:col-span-1 space-y-6">
-                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4 h-full">
                         <h3 className="font-bold text-slate-800 text-lg border-b border-slate-100 pb-3">Lead Info</h3>
                         <div className="space-y-4">
                             <InfoRow label="Admission No" value={user.admissionNumber || 'N/A'} />
@@ -206,8 +165,10 @@ const LeadView: React.FC<{ user: any }> = ({ user }) => {
                             <InfoRow label="Division" value={user.division || 'N/A'} />
                         </div>
                     </div>
+                </div>
 
-                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4 h-full">
                         <h3 className="font-bold text-slate-800 text-lg border-b border-slate-100 pb-3">Club Details</h3>
                         {myClub ? (
                             <div className="space-y-4">
@@ -222,24 +183,6 @@ const LeadView: React.FC<{ user: any }> = ({ user }) => {
                         ) : <p className="text-slate-500">No club assigned.</p>}
                     </div>
                 </div>
-
-                <div className="md:col-span-2 space-y-6">
-                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                        <h3 className="font-bold text-slate-800 text-lg border-b border-slate-100 pb-4 mb-4">Recent Meetings</h3>
-                        <div className="space-y-0 divide-y divide-slate-100">
-                            {clubMeetings.slice(0, 5).map(meeting => (
-                                <div key={meeting.id} className="py-4 flex items-center justify-between hover:bg-slate-50 transition-colors px-2 rounded">
-                                    <div>
-                                        <div className="font-bold text-slate-800 text-sm">{meeting.title}</div>
-                                        <div className="text-xs text-slate-500">{meeting.date} • {meeting.startTime}</div>
-                                    </div>
-                                    <Badge status={(meeting.status || 'SCHEDULED').toUpperCase()} />
-                                </div>
-                            ))}
-                            {clubMeetings.length === 0 && <p className="text-slate-400 py-4">No meetings scheduled.</p>}
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     );
@@ -247,23 +190,6 @@ const LeadView: React.FC<{ user: any }> = ({ user }) => {
 
 // --- FACULTY VIEW ---
 const FacultyView: React.FC<{ user: any }> = ({ user }) => {
-    const coordinatedClubId = user.committeeCoordinator;
-    const coordinatedClub = CLUBS.find(c => c.id === coordinatedClubId);
-
-    const [clubMeetings, setClubMeetings] = useState<Meeting[]>([]);
-    const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
-
-    useEffect(() => {
-        const unsubMeet = onSnapshot(query(collection(db, 'meetings'), where('clubId', '==', coordinatedClubId)), snap => {
-            const fetched = snap.docs.map(d => ({ id: d.id, ...d.data() } as Meeting));
-            setClubMeetings(fetched.filter(m => (m.status || '').toLowerCase() === 'completed'));
-        });
-        const unsubAtt = onSnapshot(collection(db, 'attendance'), snap => {
-            setAttendanceRecords(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-        });
-        return () => { unsubMeet(); unsubAtt(); };
-    }, []);
-
     return (
         <div className="space-y-8 animate-fadeIn profile-item">
             <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
@@ -272,76 +198,9 @@ const FacultyView: React.FC<{ user: any }> = ({ user }) => {
                     <InfoRow label="Designation" value="Assistant Professor" />
                     <InfoRow label="Department" value={user.department || user.branch || 'Engineering'} />
                     <InfoRow label="Employee ID" value={user.employeeNumber || 'Not Specified'} />
-                    <InfoRow label="Role" value={coordinatedClub ? "Club Coordinator" : "Faculty"} />
+                    <InfoRow label="Role" value={user.committeeCoordinator ? "Club Coordinator" : "Faculty"} />
                 </div>
             </div>
-
-            {coordinatedClub ? (
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div className="p-6 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
-                        <div>
-                            <h3 className="font-bold text-slate-800 text-lg">Coordinated Club: {coordinatedClub.name}</h3>
-                            <p className="text-slate-500 text-sm">Review meeting reports and attendance logs.</p>
-                        </div>
-                        <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-lg font-bold text-slate-500 shadow-sm">
-                            {coordinatedClub.name.charAt(0)}
-                        </div>
-                    </div>
-
-                    <div className="p-0 overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead className="bg-white border-b border-slate-200">
-                                <tr>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Meeting Title</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Date</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Attendees</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {clubMeetings.map(meeting => {
-                                    const attendees = attendanceRecords.filter(a => a.meetingId === meeting.id && a.status === 'PRESENT');
-
-                                    return (
-                                        <tr key={meeting.id} className="hover:bg-slate-50">
-                                            <td className="px-6 py-4 text-sm font-bold text-slate-700">{meeting.title}</td>
-                                            <td className="px-6 py-4 text-sm font-mono text-slate-500">{meeting.date}</td>
-                                            <td className="px-6 py-4 text-sm text-slate-600">
-                                                {attendees.length > 0 ? (
-                                                    <div className="flex -space-x-2 overflow-hidden">
-                                                        {attendees.slice(0, 5).map(a => (
-                                                            <div key={a.id} className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600" title={a.studentName || 'Student'}>
-                                                                {(a.studentName || 'S').charAt(0)}
-                                                            </div>
-                                                        ))}
-                                                        {attendees.length > 5 && (
-                                                            <div className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-500">
-                                                                +{attendees.length - 5}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ) : <span className="text-slate-400 italic">No Data</span>}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <Button size="sm" variant="outline" className="text-primary-600 border-primary-200 hover:bg-primary-50">
-                                                    View Report
-                                                </Button>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                                {clubMeetings.length === 0 && (
-                                    <tr><td colSpan={4} className="p-8 text-center text-slate-400">No completed meetings found.</td></tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            ) : (
-                <div className="p-8 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-center">
-                    <p className="text-slate-500 font-medium">You are not assigned as a coordinator for any club.</p>
-                </div>
-            )}
         </div>
     );
 };
