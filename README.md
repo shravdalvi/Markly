@@ -1,5 +1,5 @@
 # Markly - Verifiable Committee Attendance & Conflict Resolution Platform
-Deployed version - [Markly](#)
+Deployed version - [Markly](https://markly-rouge.vercel.app/#/login)
 
 Markly is a role-based attendance tracking platform specifically designed to bridge the trust gap between students, committee leads, and professors. Frequently, college students participating in university committees are forced to miss regular lectures to attend official committee meetings, leading to attendance shortages. When a student claims they were at a committee meeting mid-lecture, professors rightfully require verifiable proof to excuse the absence. Markly provides a verified, transparent system where Committee Leads log official meeting attendance, Students can track and present their verifiable participation, and Professors (Faculty) can confidently resolve attendance conflicts based on transparent records. Integrated with Firebase for secure authentication and supported by an Express backend for notifications, Markly ensures a smooth and accountable attendance process across the institution.
 
@@ -77,26 +77,25 @@ npm start
 **Test Users:**
 
 - **Student User - 1**
-  - email: shravanid@gmail.com
-  - password: shravani
+  - email: student01@gmail.com
+  - password: stu@123
   
 - **Student User - 2**
-  - email: charle@gmail.com
-  - password: charle
- 
-- **Student User - 3**
-  - email: priyanshu@gmail.com
-  - password: priyanshu
+  - email: student02@gmail.com
+  - password: stu@123
 
-- **Lead User**
-  - email: akansha@gmail.com
-  - password: akansha
+- **Lead User - 1**
+  - email: lead@gmail.com
+  - password: lead@123
+
+- **Lead User - 2**
+  - email: lead2@gmail.com
+  - password: lead@123
 
 - **Faculty User**
-  - email: tejaswi@gmail.com
-  - password: tejaswi
+  - email: prof@gmail.com
+  - password: prof@123
 
-*(Update the above with your actual test credentials if needed)*
 
 **Demo:**
 Video link - [Your Demo Video Link Here]
