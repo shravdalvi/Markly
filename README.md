@@ -98,7 +98,7 @@ npm start
 
 
 **Demo:**
-Video link - [https://youtu.be/xTUwSkZ48Ic]
+Video link - https://youtu.be/xTUwSkZ48Ic
 
 ### Images
 
@@ -135,4 +135,4 @@ JavaScript TypeScript Node.js Express.js React Vite Firebase HTML5 CSS3 Twilio N
 **Additional:**
 - Twilio API
 - Nodemailer
-- Demonstration Video link - [https://youtu.be/xTUwSkZ48Ic]
+- Demonstration Video link - https://youtu.be/xTUwSkZ48Ic
