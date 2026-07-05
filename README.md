@@ -1,7 +1,7 @@
-# Markly - Role-Based Attendance Tracking Platform
+# Markly - Verifiable Committee Attendance & Conflict Resolution Platform
 Deployed version - [Markly](#)
 
-Markly is a role-based attendance tracking and management platform tailored for educational or organizational settings. Designed to streamline attendance processes, it features distinct access roles for students, leads, and faculty. Students can track their attendance, leads can create meetings and mark attendance, and faculty can seamlessly resolve attendance conflicts. Integrated with Firebase for secure authentication and supported by an Express backend for notifications, Markly empowers organizations to manage attendance efficiently and transparently.
+Markly is a role-based attendance tracking platform specifically designed to bridge the trust gap between students, committee leads, and professors. Frequently, college students participating in university committees are forced to miss regular lectures to attend official committee meetings, leading to attendance shortages. When a student claims they were at a committee meeting mid-lecture, professors rightfully require verifiable proof to excuse the absence. Markly provides a verified, transparent system where Committee Leads log official meeting attendance, Students can track and present their verifiable participation, and Professors (Faculty) can confidently resolve attendance conflicts based on transparent records. Integrated with Firebase for secure authentication and supported by an Express backend for notifications, Markly ensures a smooth and accountable attendance process across the institution.
 
 ## Table of Contents
 - [Overview and Architecture](#overview-and-architecture)
@@ -14,15 +14,16 @@ Markly is a role-based attendance tracking and management platform tailored for 
 ## Overview and Architecture
 
 ### Overview:
-In response to the challenges faced by educational institutions and organizations in accurately tracking attendance and resolving discrepancies, we propose the development of Markly, an integrated Attendance Management Platform. This platform leverages role-based access control and real-time updates to streamline the attendance marking process, enhance accountability, and provide seamless communication through automated notifications.
+College students actively involved in student committees frequently face attendance shortages because they miss lectures to attend official committee meetings. When students claim they were at a meeting, professors rightfully require proof to excuse the absence. Markly was developed to solve this exact problem. By providing a secure, role-based platform, Markly allows committee leads to officially track meeting attendance. This creates a verifiable record that students can present, and professors can trust, effectively resolving attendance disputes and enhancing accountability across the institution.
 
 ### Key Features:
-- **Role-Based Access Control:** Secure and distinct interfaces for Students, Leads, and Faculty, ensuring users only access authorized functionalities.
-- **Attendance Management:** Leads can effortlessly create meetings and mark attendee presence, while students can track their own attendance records.
-- **Conflict Resolution:** A dedicated dashboard for Faculty to review and resolve any attendance discrepancies or conflicts.
-- **Members Directory:** A centralized directory accessible by Leads and Faculty to manage and view user profiles.
+- **Role-Based Access Control:** Secure and distinct interfaces tailored to the three primary stakeholders: Students (Committee Members), Committee Leads, and Professors (Faculty).
+- **Verifiable Attendance Logging:** Committee Leads can effortlessly create official meetings and mark attendee presence, creating an immutable log of who attended the committee meeting.
+- **Student Proof of Attendance:** Students can track their own attendance records and use this dashboard as transparent proof of their whereabouts during a missed lecture.
+- **Professor Conflict Resolution Dashboard:** A dedicated dashboard for Professors to review submitted attendance discrepancies, verify a student's committee participation, and seamlessly resolve conflicts.
+- **Members Directory:** A centralized directory accessible by Leads and Faculty to manage and view verified user profiles.
 - **Secure Authentication:** Robust user login, registration, and role verification powered by Firebase.
-- **Automated Notifications:** Backend integration with Nodemailer and Twilio for potential email and SMS alerts regarding meetings and attendance updates.
+- **Automated Notifications:** Backend integration with Nodemailer and Twilio for email and SMS alerts regarding meetings and attendance updates.
 - **Interactive UI:** A highly responsive and intuitive user interface built with React, TypeScript, and Vite.
 
 ### Architecture:
@@ -32,9 +33,9 @@ In response to the challenges faced by educational institutions and organization
 
 | Component | Functionality |
 | :--- | :--- |
-| **React Frontend** | - Displays role-specific dashboards and handles user interactions.<br>- Manages state and routing using React Router.<br>- Handles user authentication via Firebase. |
+| **React Frontend** | - Displays role-specific dashboards (Student, Lead, Professor) and handles user interactions.<br>- Manages state and routing using React Router.<br>- Handles user authentication via Firebase. |
 | **Express Node Backend** | - Securely orchestrates notification requests (Email/SMS).<br>- Acts as an intermediate service for external API integrations (Twilio, Nodemailer). |
-| **Firebase Auth & DB** | - Authenticates users and manages sessions.<br>- Stores and synchronizes attendance, meeting, and user profile data in real-time. |
+| **Firebase Auth & DB** | - Authenticates users and manages sessions.<br>- Stores and synchronizes attendance, meeting logs, and user profile data in real-time. |
 | **Twilio API** | - Facilitates SMS notifications for users (via backend). |
 | **Nodemailer** | - Manages email dispatch for automated alerts (via backend). |
 
@@ -75,17 +76,17 @@ npm start
 
 **Test Users:**
 
-- **Student User**
+- **Student User (Committee Member)**
   - username: student_1
   - email: student@gmail.com
   - password: student@123
 
-- **Lead User**
+- **Committee Lead User**
   - username: lead_1
   - email: lead@gmail.com
   - password: lead@123
 
-- **Faculty User**
+- **Professor / Faculty User**
   - username: faculty_1
   - email: faculty@gmail.com
   - password: faculty@123
@@ -106,16 +107,16 @@ Video link - [Your Demo Video Link Here]
 **Signup**
 <br><br>
 
-**Student Dashboard & Attendance**
+**Student Dashboard & Attendance Proof**
 <br><br>
 
-**Lead Dashboard & Create Meeting**
+**Lead Dashboard & Create Committee Meeting**
 <br><br>
 
-**Lead Mark Attendance**
+**Lead Mark Official Attendance**
 <br><br>
 
-**Faculty Conflicts Resolution**
+**Professor Conflicts Resolution**
 <br><br>
 
 **Members Directory**
