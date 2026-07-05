@@ -60,7 +60,11 @@ export const MembersDirectory: React.FC = () => {
             ),
             snap => {
                 const fetchedStudents = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setStudents(fetchedStudents);
+                // Exclude specific test/mock users from appearing in the directory
+                const filteredStudents = fetchedStudents.filter((s: any) => 
+                    !/joh|krrish|karan/i.test(s.name || '')
+                );
+                setStudents(filteredStudents);
             }
         );
         
